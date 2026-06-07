@@ -1,345 +1,444 @@
 /**
- * Priyanshi Mishra — Portfolio Script
- * Handles: loader, theme, nav scroll/mobile, scroll-reveal, contact form, back-to-top
- * Author: Claude (generated)
+ * ============================================================
+ * Priyanshi Mishra — Portfolio Website
+ * script.js — Core Functionality
+ * ============================================================
+ *
+ * Modules:
+ *   1. Page Loading Animation
+ *   2. Theme Toggle (Dark/Light) with localStorage
+ *   3. Navbar Scroll Effect
+ *   4. Mobile Hamburger Menu
+ *   5. Smooth Scroll for Anchor Links
+ *   6. Scroll-triggered Fade-in Animations (IntersectionObserver)
+ *   7. Contact Form Validation
+ *
+ * ============================================================
  */
 
-'use strict';
+"use strict";
 
-/* ============================================================
-   UTILITY HELPERS
-============================================================ */
+/* ──────────────────────────────────────────────────────────────
+   1. PAGE LOADING ANIMATION
+   Fades out the loading overlay once the page is fully loaded.
+   ────────────────────────────────────────────────────────────── */
 
-/** Safely query a single element */
-const $  = (sel, ctx = document) => ctx.querySelector(sel);
-/** Safely query multiple elements */
-const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+(function initLoadingAnimation() {
+  const overlay = document.getElementById("loading-overlay");
+  if (!overlay) return;
 
-
-/* ============================================================
-   1. LOADER
-============================================================ */
-(function initLoader() {
-  const loader = $('#loader');
-  if (!loader) return;
-
-  // Remove loader after page is ready (min 600ms for polish)
-  const hide = () => {
-    loader.classList.add('hidden');
-    // Remove from DOM after transition so it can't interfere
-    loader.addEventListener('transitionend', () => loader.remove(), { once: true });
-  };
-
-  if (document.readyState === 'complete') {
-    setTimeout(hide, 300);
-  } else {
-    window.addEventListener('load', () => setTimeout(hide, 600));
-  }
+  window.addEventListener("load", () => {
+    // Small delay so the user glimpses the brand animation
+    setTimeout(() => {
+      overlay.classList.add("hidden");
+      // Remove from DOM after transition completes
+      overlay.addEventListener("transitionend", () => {
+        overlay.remove();
+      });
+    }, 600);
+  });
 })();
 
 
-/* ============================================================
-   2. THEME — Dark / Light / Auto
-============================================================ */
-(function initTheme() {
-  const html   = document.documentElement;
-  const toggle = $('#theme-toggle');
+/* ──────────────────────────────────────────────────────────────
+   2. THEME TOGGLE
+   Persists user preference in localStorage.
+   Falls back to prefers-color-scheme on first visit.
+   ────────────────────────────────────────────────────────────── */
+
+(function initThemeToggle() {
+  const toggle = document.getElementById("theme-toggle");
+  const sunIcon = document.getElementById("sun-icon");
+  const moonIcon = document.getElementById("moon-icon");
   if (!toggle) return;
 
-  // Read stored preference (or fall back to 'auto')
-  const stored = localStorage.getItem('portfolio-theme') || 'auto';
-  applyTheme(stored);
-
-  toggle.addEventListener('click', () => {
-    // Cycle: auto → light → dark → auto
-    const current = html.getAttribute('data-theme') || 'auto';
-    const next = current === 'auto' ? 'light' : current === 'light' ? 'dark' : 'auto';
-    applyTheme(next);
-    localStorage.setItem('portfolio-theme', next);
-  });
-
+  /**
+   * Apply theme to document and update toggle icons.
+   * @param {"dark"|"light"} theme
+   */
   function applyTheme(theme) {
-    html.setAttribute('data-theme', theme);
-    toggle.setAttribute('aria-label',
-      `Switch to ${theme === 'auto' ? 'light' : theme === 'light' ? 'dark' : 'system'} mode`
-    );
+    if (theme === "light") {
+      document.documentElement.setAttribute("data-theme", "light");
+      if (sunIcon) sunIcon.style.display = "none";
+      if (moonIcon) moonIcon.style.display = "block";
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      if (sunIcon) sunIcon.style.display = "block";
+      if (moonIcon) moonIcon.style.display = "none";
+    }
   }
+
+  // Determine initial theme
+  const savedTheme = localStorage.getItem("portfolio-theme");
+  if (savedTheme) {
+    applyTheme(savedTheme);
+  } else {
+    // Respect system preference; default to dark
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    applyTheme(prefersDark ? "dark" : "light");
+  }
+
+  // Toggle on click
+  toggle.addEventListener("click", () => {
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    const newTheme = currentTheme === "light" ? "dark" : "light";
+    applyTheme(newTheme);
+    localStorage.setItem("portfolio-theme", newTheme);
+  });
 })();
 
 
-/* ============================================================
-   3. STICKY NAVIGATION — scroll shadow
-============================================================ */
-(function initNavScroll() {
-  const header = $('#site-header');
-  if (!header) return;
+/* ──────────────────────────────────────────────────────────────
+   3. NAVBAR SCROLL EFFECT
+   Adds `.scrolled` class to navbar when page is scrolled,
+   triggering background and shadow via CSS.
+   ────────────────────────────────────────────────────────────── */
 
-  const onScroll = () => {
-    header.classList.toggle('scrolled', window.scrollY > 40);
-  };
+(function initNavbarScroll() {
+  const navbar = document.getElementById("navbar");
+  if (!navbar) return;
 
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll(); // run once on load
+  const SCROLL_THRESHOLD = 50;
+
+  function handleScroll() {
+    if (window.scrollY > SCROLL_THRESHOLD) {
+      navbar.classList.add("scrolled");
+    } else {
+      navbar.classList.remove("scrolled");
+    }
+  }
+
+  // Use passive listener for scroll performance
+  window.addEventListener("scroll", handleScroll, { passive: true });
+  // Run once on load in case page is already scrolled
+  handleScroll();
 })();
 
 
-/* ============================================================
-   4. MOBILE MENU — hamburger toggle
-============================================================ */
+/* ──────────────────────────────────────────────────────────────
+   4. MOBILE HAMBURGER MENU
+   Toggles mobile navigation overlay.
+   Closes menu when a link is clicked or Escape is pressed.
+   ────────────────────────────────────────────────────────────── */
+
 (function initMobileMenu() {
-  const toggle = $('#menu-toggle');
-  const menu   = $('#mobile-menu');
-  if (!toggle || !menu) return;
+  const hamburger = document.getElementById("hamburger");
+  const navLinks = document.getElementById("nav-links");
+  const navbar = document.getElementById("navbar");
+  if (!hamburger || !navLinks) return;
 
-  const open  = () => {
-    menu.setAttribute('aria-hidden', 'false');
-    toggle.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden'; // prevent scroll-through
-  };
+  function openMenu() {
+    hamburger.classList.add("active");
+    navLinks.classList.add("mobile-menu-open");
+    if (navbar) navbar.classList.add("mobile-menu-open");
+    hamburger.setAttribute("aria-expanded", "true");
+    document.body.style.overflow = "hidden";
+  }
 
-  const close = () => {
-    menu.setAttribute('aria-hidden', 'true');
-    toggle.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
-  };
+  function closeMenu() {
+    hamburger.classList.remove("active");
+    navLinks.classList.remove("mobile-menu-open");
+    if (navbar) navbar.classList.remove("mobile-menu-open");
+    hamburger.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+  }
 
-  toggle.addEventListener('click', () => {
-    const isOpen = menu.getAttribute('aria-hidden') === 'false';
-    isOpen ? close() : open();
+  hamburger.addEventListener("click", () => {
+    const isOpen = navLinks.classList.contains("mobile-menu-open");
+    isOpen ? closeMenu() : openMenu();
   });
 
   // Close on nav link click
-  $$('[data-close-menu]').forEach(link => link.addEventListener('click', close));
-
-  // Close on outside click
-  document.addEventListener('click', (e) => {
-    if (!menu.contains(e.target) && !toggle.contains(e.target)) close();
+  navLinks.querySelectorAll(".nav-link").forEach((link) => {
+    link.addEventListener("click", closeMenu);
   });
 
   // Close on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close();
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+
+  // Close when clicking outside the menu
+  document.addEventListener("click", (e) => {
+    if (
+      navLinks.classList.contains("mobile-menu-open") &&
+      !navLinks.contains(e.target) &&
+      !hamburger.contains(e.target)
+    ) {
+      closeMenu();
+    }
   });
 })();
 
 
-/* ============================================================
-   5. SCROLL REVEAL — Intersection Observer
-============================================================ */
-(function initScrollReveal() {
-  const items = $$('.reveal');
-  if (!items.length) return;
+/* ──────────────────────────────────────────────────────────────
+   5. SMOOTH SCROLL FOR ANCHOR LINKS
+   Handles clicks on any anchor link pointing to an ID on the
+   page. Offsets for fixed navbar height.
+   ────────────────────────────────────────────────────────────── */
 
-  // Respect prefers-reduced-motion
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    items.forEach(el => el.classList.add('visible'));
+(function initSmoothScroll() {
+  const NAVBAR_HEIGHT = 80;
+
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener("click", (e) => {
+      const targetId = anchor.getAttribute("href");
+      if (!targetId || targetId === "#") return;
+
+      const targetEl = document.querySelector(targetId);
+      if (!targetEl) return;
+
+      e.preventDefault();
+
+      const targetPosition =
+        targetEl.getBoundingClientRect().top + window.scrollY - NAVBAR_HEIGHT;
+
+      window.scrollTo({
+        top: targetPosition,
+        behavior: "smooth",
+      });
+
+      // Update URL hash without jumping
+      history.pushState(null, null, targetId);
+    });
+  });
+})();
+
+
+/* ──────────────────────────────────────────────────────────────
+   6. SCROLL-TRIGGERED FADE-IN ANIMATIONS
+   Uses IntersectionObserver for performant scroll animations.
+   Respects `prefers-reduced-motion` accessibility setting.
+   ────────────────────────────────────────────────────────────── */
+
+(function initScrollAnimations() {
+  // Skip if user prefers reduced motion
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  if (prefersReducedMotion) {
+    // Make all fade-in elements immediately visible
+    document.querySelectorAll(".fade-in").forEach((el) => {
+      el.classList.add("visible");
+    });
     return;
   }
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target); // once is enough
-        }
-      });
-    },
-    { threshold: 0.12, rootMargin: '0px 0px -60px 0px' }
-  );
+  const observerOptions = {
+    root: null,
+    rootMargin: "0px 0px -60px 0px",
+    threshold: 0.1,
+  };
 
-  items.forEach(el => observer.observe(el));
+  const fadeInObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        // Stop observing once visible (animate only once)
+        fadeInObserver.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // Observe all elements with .fade-in class
+  document.querySelectorAll(".fade-in").forEach((el) => {
+    fadeInObserver.observe(el);
+  });
 })();
 
 
-/* ============================================================
-   6. ACTIVE NAV LINK — highlight based on scroll position
-============================================================ */
-(function initActiveNav() {
-  const sections = $$('section[id]');
-  const navLinks = $$('.nav-links a');
-
-  if (!sections.length || !navLinks.length) return;
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const id = entry.target.getAttribute('id');
-          navLinks.forEach(link => {
-            link.removeAttribute('aria-current');
-            if (link.getAttribute('href') === `#${id}`) {
-              link.setAttribute('aria-current', 'page');
-            }
-          });
-        }
-      });
-    },
-    { threshold: 0.4 }
-  );
-
-  sections.forEach(section => observer.observe(section));
-})();
-
-
-/* ============================================================
+/* ──────────────────────────────────────────────────────────────
    7. CONTACT FORM VALIDATION
-============================================================ */
+   Client-side validation with inline error messages.
+   Handles form submission to Formspree (or shows success).
+   ────────────────────────────────────────────────────────────── */
+
 (function initContactForm() {
-  const form    = $('#contact-form');
-  const success = $('#form-success');
+  const form = document.getElementById("contact-form");
   if (!form) return;
 
-  /* Validation rules */
-  const rules = {
-    name:    { el: $('#f-name'),    errEl: $('#name-error'),    minLen: 2,  label: 'Name'    },
-    email:   { el: $('#f-email'),   errEl: $('#email-error'),   type: 'email', label: 'Email' },
-    subject: { el: $('#f-subject'), errEl: $('#subject-error'), minLen: 3,  label: 'Subject' },
-    message: { el: $('#f-message'), errEl: $('#message-error'), minLen: 10, label: 'Message' },
+  const fields = {
+    name: {
+      el: document.getElementById("contact-name"),
+      error: document.getElementById("name-error"),
+      validate: (val) => {
+        if (!val.trim()) return "Please enter your name.";
+        if (val.trim().length < 2) return "Name must be at least 2 characters.";
+        return "";
+      },
+    },
+    email: {
+      el: document.getElementById("contact-email"),
+      error: document.getElementById("email-error"),
+      validate: (val) => {
+        if (!val.trim()) return "Please enter your email.";
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(val.trim())) return "Please enter a valid email address.";
+        return "";
+      },
+    },
+    subject: {
+      el: document.getElementById("contact-subject"),
+      error: document.getElementById("subject-error"),
+      validate: (val) => {
+        if (!val.trim()) return "Please enter a subject.";
+        if (val.trim().length < 3) return "Subject must be at least 3 characters.";
+        return "";
+      },
+    },
+    message: {
+      el: document.getElementById("contact-message"),
+      error: document.getElementById("message-error"),
+      validate: (val) => {
+        if (!val.trim()) return "Please enter your message.";
+        if (val.trim().length < 10) return "Message must be at least 10 characters.";
+        return "";
+      },
+    },
   };
 
-  /** Show an error message for a field */
-  const showError = (rule, msg) => {
-    rule.errEl.textContent = msg;
-    rule.el.classList.add('error');
-    rule.el.setAttribute('aria-invalid', 'true');
-    rule.el.setAttribute('aria-describedby', rule.errEl.id);
-  };
-
-  /** Clear the error for a field */
-  const clearError = (rule) => {
-    rule.errEl.textContent = '';
-    rule.el.classList.remove('error');
-    rule.el.removeAttribute('aria-invalid');
-  };
-
-  /** Validate a single field; returns true if valid */
-  const validateField = (rule) => {
-    const val = rule.el.value.trim();
-
-    if (!val) {
-      showError(rule, `${rule.label} is required.`);
+  /**
+   * Validate a single field and show/hide error message.
+   * @param {object} field — field config object
+   * @returns {boolean} — true if valid
+   */
+  function validateField(field) {
+    if (!field.el || !field.error) return true;
+    const errorMsg = field.validate(field.el.value);
+    if (errorMsg) {
+      field.error.textContent = errorMsg;
+      field.error.style.display = "block";
+      field.el.classList.add("invalid");
+      field.el.setAttribute("aria-invalid", "true");
       return false;
+    } else {
+      field.error.textContent = "";
+      field.error.style.display = "none";
+      field.el.classList.remove("invalid");
+      field.el.removeAttribute("aria-invalid");
+      return true;
     }
-    if (rule.type === 'email') {
-      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRe.test(val)) {
-        showError(rule, 'Please enter a valid email address.');
-        return false;
-      }
-    }
-    if (rule.minLen && val.length < rule.minLen) {
-      showError(rule, `${rule.label} must be at least ${rule.minLen} characters.`);
-      return false;
-    }
+  }
 
-    clearError(rule);
-    return true;
-  };
-
-  // Real-time validation on blur
-  Object.values(rules).forEach(rule => {
-    rule.el?.addEventListener('blur', () => validateField(rule));
-    rule.el?.addEventListener('input', () => {
-      if (rule.el.classList.contains('error')) validateField(rule);
-    });
+  // Validate on blur (when user leaves a field)
+  Object.values(fields).forEach((field) => {
+    if (field.el) {
+      field.el.addEventListener("blur", () => validateField(field));
+      // Clear error on input
+      field.el.addEventListener("input", () => {
+        if (field.el.classList.contains("invalid")) {
+          validateField(field);
+        }
+      });
+    }
   });
 
-  form.addEventListener('submit', (e) => {
+  // Handle form submission
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // Validate all fields
-    const valid = Object.values(rules).map(validateField).every(Boolean);
-    if (!valid) {
-      // Focus first errored field for accessibility
-      const firstError = form.querySelector('[aria-invalid="true"]');
-      firstError?.focus();
-      return;
+    let isValid = true;
+    Object.values(fields).forEach((field) => {
+      if (!validateField(field)) isValid = false;
+    });
+
+    if (!isValid) return;
+
+    const submitBtn = form.querySelector(".form-submit");
+    const successMsg = document.getElementById("form-success");
+
+    // Disable button and show loading state
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Sending...";
     }
 
-    // Simulate submission (replace with real endpoint like Formspree / EmailJS)
-    const btn     = form.querySelector('[type="submit"]');
-    const btnText = btn.querySelector('.btn-text');
+    try {
+      // Attempt to submit to Formspree
+      const formData = new FormData(form);
+      const response = await fetch(form.action, {
+        method: "POST",
+        body: formData,
+        headers: { Accept: "application/json" },
+      });
 
-    btn.disabled    = true;
-    btnText.textContent = 'Sending…';
-
-    // Simulate async send
-    setTimeout(() => {
-      form.reset();
-      btn.disabled    = false;
-      btnText.textContent = 'Send Message';
-
-      // Show success banner
-      if (success) {
-        success.hidden = false;
-        success.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        setTimeout(() => { success.hidden = true; }, 6000);
+      if (response.ok) {
+        // Show success message
+        if (successMsg) {
+          successMsg.textContent = "Thank you! Your message has been sent successfully.";
+          successMsg.style.display = "block";
+        }
+        form.reset();
+        // Clear all error states
+        Object.values(fields).forEach((field) => {
+          if (field.el) field.el.classList.remove("invalid");
+          if (field.error) field.error.style.display = "none";
+        });
+      } else {
+        throw new Error("Submission failed");
       }
-    }, 1200);
+    } catch (error) {
+      // Show a user-friendly error
+      if (successMsg) {
+        successMsg.textContent =
+          "Something went wrong. Please email me directly at 24priyanshimishra@gmail.com";
+        successMsg.style.display = "block";
+        successMsg.style.color = "var(--color-secondary)";
+      }
+    } finally {
+      // Re-enable button
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Send Message";
+      }
 
-    /*
-    ── REAL IMPLEMENTATION EXAMPLE (Formspree):
-    fetch('https://formspree.io/f/YOUR_FORM_ID', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
-        name:    rules.name.el.value,
-        email:   rules.email.el.value,
-        subject: rules.subject.el.value,
-        message: rules.message.el.value,
-      })
-    })
-    .then(res => { if (res.ok) { ... } })
-    .catch(() => { ... });
-    */
+      // Hide success/error message after 5 seconds
+      const successEl = document.getElementById("form-success");
+      if (successEl) {
+        setTimeout(() => {
+          successEl.style.display = "none";
+          successEl.style.color = "";
+        }, 5000);
+      }
+    }
   });
 })();
 
 
-/* ============================================================
-   8. BACK TO TOP
-============================================================ */
-(function initBackToTop() {
-  const btn = $('#back-to-top');
-  if (!btn) return;
+/* ──────────────────────────────────────────────────────────────
+   8. ACTIVE NAV LINK HIGHLIGHTING
+   Highlights the nav link corresponding to the currently
+   visible section using IntersectionObserver.
+   ────────────────────────────────────────────────────────────── */
 
-  window.addEventListener('scroll', () => {
-    btn.hidden = window.scrollY < 400;
-  }, { passive: true });
+(function initActiveNavHighlight() {
+  const sections = document.querySelectorAll("section[id]");
+  const navLinks = document.querySelectorAll(".nav-link");
+  if (!sections.length || !navLinks.length) return;
 
-  btn.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-})();
+  const observerOptions = {
+    root: null,
+    rootMargin: "-20% 0px -70% 0px",
+    threshold: 0,
+  };
 
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const sectionId = entry.target.getAttribute("id");
+        navLinks.forEach((link) => {
+          link.classList.remove("active");
+          if (link.getAttribute("href") === `#${sectionId}`) {
+            link.classList.add("active");
+          }
+        });
+      }
+    });
+  }, observerOptions);
 
-/* ============================================================
-   9. FOOTER YEAR — auto-update copyright
-============================================================ */
-(function initFooterYear() {
-  const el = $('#footer-year');
-  if (el) el.textContent = new Date().getFullYear();
-})();
-
-
-/* ============================================================
-   10. SMOOTH SCROLL — anchor links that bypass nav height
-============================================================ */
-(function initSmoothScroll() {
-  const navHeight = parseInt(
-    getComputedStyle(document.documentElement).getPropertyValue('--nav-h')
-  ) || 68;
-
-  document.addEventListener('click', (e) => {
-    const anchor = e.target.closest('a[href^="#"]');
-    if (!anchor) return;
-
-    const target = $(anchor.getAttribute('href'));
-    if (!target) return;
-
-    e.preventDefault();
-    const top = target.getBoundingClientRect().top + window.scrollY - navHeight - 8;
-    window.scrollTo({ top, behavior: 'smooth' });
+  sections.forEach((section) => {
+    sectionObserver.observe(section);
   });
 })();

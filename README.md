@@ -1,152 +1,131 @@
-# Priyanshi Mishra — Portfolio
+# Priyanshi Mishra — Portfolio Website
 
-A minimal, clean, and fully responsive personal portfolio website built with pure HTML, CSS, and JavaScript.
-
----
+A modern, minimalist portfolio website showcasing my work as a Pre-Doc Researcher and Computer Science Engineer.
 
 ## ✨ Features
 
-- **Minimal & Clean** design with Rose/Pink gradient palette
-- **Dark / Light / Auto** (system default) colour scheme toggle
-- **Smooth animations** — fade-up on load, scroll-reveal on scroll
-- **Fully responsive** — mobile-first, tested from 320px upward
-- **Contact form** with real-time client-side validation
-- **Accessible** — semantic HTML, ARIA labels, focus management, keyboard navigation
-- **SEO optimised** — meta tags, Open Graph, Twitter Card
-- **Lighthouse-optimised** — minimal JS, no blocking resources, preconnected fonts
-- **Dark/Light theme** persisted in `localStorage`
+- **Minimalist Clean Design** — Elegant typography, generous whitespace, coastal color palette
+- **Dark/Light Mode** — Toggle between themes with automatic persistence
+- **Fully Responsive** — Mobile-first design that looks great on all devices
+- **Accessible** — Semantic HTML, ARIA labels, respects `prefers-reduced-motion`
+- **SEO Optimized** — Meta tags, Open Graph, semantic structure
+- **Smooth Animations** — Scroll-triggered fade-ins using IntersectionObserver
+- **Contact Form** — Client-side validation with Formspree integration
+- **Performance** — No frameworks, minimal dependencies, optimized for Lighthouse
 
----
+## 🎨 Color Palette
 
-## 🗂 Project Structure
+| Token | Dark Mode | Light Mode |
+|-------|-----------|------------|
+| Background | `#0D1117` | `#FFF5EE` |
+| Primary (Turquoise) | `#2DD4BF` | `#0D9488` |
+| Secondary (Coral) | `#F4845F` | `#E8634A` |
+| Text | `#FFF5EE` | `#1A1A2E` |
+
+## 📁 Project Structure
 
 ```
 portfolio/
-├── index.html      ← All sections: Hero, About, Skills, Experience,
-│                     Projects, Research, Achievements, Contact
-├── styles.css      ← All styles: tokens, components, dark mode, responsive
-├── script.js       ← Loader, theme, mobile nav, scroll-reveal, form, back-to-top
-└── assets/
-    └── (place profile photo or any images here)
+├── index.html          # Main HTML — all sections
+├── styles.css          # Complete design system & responsive styles
+├── script.js           # Theme toggle, animations, form validation
+├── assets/             # Images, photos (add your headshot here)
+│   └── profile.jpg     # (Add your photo with this filename)
+├── pages/              # Reserved for future multi-page expansion
+└── README.md           # You're reading it!
 ```
-
----
 
 ## 🚀 Quick Start
 
-### Local development
+### Local Development
 
-No build tools required — it's just static files.
+1. Clone or download this repository:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/portfolio.git
+   cd portfolio
+   ```
 
-```bash
-# Clone / download the portfolio folder, then:
-cd portfolio
+2. Open `index.html` in your browser:
+   - Simply double-click `index.html`, or
+   - Use a local server for best results:
+     ```bash
+     # Using Python
+     python -m http.server 8000
 
-# Option A — Python (built-in)
-python3 -m http.server 8080
-# Open http://localhost:8080
+     # Using Node.js
+     npx serve .
 
-# Option B — Node.js serve
-npx serve .
-# Open the printed URL
+     # Using VS Code
+     # Install "Live Server" extension → Right-click index.html → "Open with Live Server"
+     ```
 
-# Option C — VS Code Live Server extension
-# Right-click index.html → "Open with Live Server"
-```
+3. Visit `http://localhost:8000` in your browser.
 
----
+### Customize Content
 
-## 🌐 Deployment Options
+1. **Photo:** Replace the photo placeholder in the hero section:
+   - Add your headshot image to the `assets/` folder (recommended: `profile.jpg`)
+   - In `index.html`, find the `.hero-image-placeholder` div and replace it with:
+     ```html
+     <img src="assets/profile.jpg" alt="Priyanshi Mishra" class="hero-image" loading="eager" />
+     ```
 
-### GitHub Pages (free, recommended)
-1. Create a new repository at github.com (e.g. `priyanshimishra.github.io`).
-2. Push the contents of this folder to the `main` branch.
-3. Go to **Settings → Pages → Source → Deploy from branch → main / root**.
-4. Your site will be live at `https://priyanshimishra.github.io` within minutes.
+2. **Social Links:** Update placeholder URLs in `index.html`:
+   - Search for `linkedin.com/in/priyanshi-mishra` and replace with your actual LinkedIn URL
+   - Search for `github.com/priyanshi-mishra` and replace with your actual GitHub URL
+   - Search for `scholar.google.com` and replace with your Google Scholar URL
+   - Search for `leetcode.com/priyanshi-mishra` and replace with your LeetCode URL
 
-### Netlify (free, drag & drop)
-1. Go to [netlify.com](https://netlify.com) and sign in.
-2. Drag the entire `portfolio/` folder onto the dashboard.
-3. Done — Netlify gives you a free URL instantly. Add a custom domain in settings.
+3. **Contact Form:** Set up Formspree:
+   - Go to [formspree.io](https://formspree.io) and create a free account
+   - Create a new form and copy your form endpoint URL
+   - In `index.html`, replace `https://formspree.io/f/placeholder` with your endpoint
 
-### Vercel (free)
-```bash
-npx vercel
-# Follow the prompts — it auto-detects a static site.
-```
+## 🌐 Deploying to GitHub Pages
 
-### Firebase Hosting (free tier)
-```bash
-npm install -g firebase-tools
-firebase login
-firebase init hosting   # choose "portfolio" folder as public directory
-firebase deploy
-```
+1. Create a new GitHub repository named `portfolio` (or `your-username.github.io` for a user site).
 
----
+2. Push your code:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial portfolio deployment"
+   git branch -M main
+   git remote add origin https://github.com/YOUR_USERNAME/portfolio.git
+   git push -u origin main
+   ```
 
-## 📬 Real Contact Form Integration
+3. Enable GitHub Pages:
+   - Go to **Settings** → **Pages** in your repository
+   - Under **Source**, select `main` branch and `/ (root)` folder
+   - Click **Save**
 
-The form currently simulates a submission. To make it actually send emails:
+4. Your site will be live at:
+   - `https://YOUR_USERNAME.github.io/portfolio/` (project site)
+   - `https://YOUR_USERNAME.github.io/` (if repo is named `your-username.github.io`)
 
-### Option A — Formspree (easiest, free)
-1. Sign up at [formspree.io](https://formspree.io).
-2. Create a new form and copy your Form ID (e.g. `xabcdefg`).
-3. In `script.js`, replace the `setTimeout` simulation block with:
-```js
-fetch('https://formspree.io/f/YOUR_FORM_ID', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-  body: JSON.stringify({
-    name:    rules.name.el.value,
-    email:   rules.email.el.value,
-    subject: rules.subject.el.value,
-    message: rules.message.el.value,
-  })
-})
-.then(res => res.ok ? showSuccess() : alert('Something went wrong.'))
-.catch(() => alert('Network error. Please try again.'));
-```
+5. Update the canonical URL in `index.html`:
+   ```html
+   <link rel="canonical" href="https://YOUR_USERNAME.github.io/portfolio/" />
+   ```
 
-### Option B — EmailJS (client-side, no backend)
-Follow the [EmailJS docs](https://www.emailjs.com/docs/sdk/installation/) to connect your Gmail.
+## 🛠 Tech Stack
 
----
+- **HTML5** — Semantic markup
+- **CSS3** — Custom properties, Flexbox, Grid, media queries
+- **Vanilla JavaScript** — No frameworks or build tools
+- **Google Fonts** — Inter + Playfair Display
+- **Formspree** — Contact form backend (free tier)
 
-## 🎨 Customisation
+## 📊 Lighthouse Targets
 
-### Update personal details
-All content is in `index.html` — no JavaScript data files. Search for the relevant section comment (e.g. `<!-- HERO -->`) and edit the HTML directly.
+| Metric | Target |
+|--------|--------|
+| Performance | 95+ |
+| Accessibility | 100 |
+| Best Practices | 100 |
+| SEO | 100 |
 
-### Change the colour palette
-Edit the CSS custom properties in `styles.css` under `:root`:
-```css
---clr-primary:    #e11d48;   /* main rose */
---clr-primary-lt: #fb7185;   /* lighter rose */
---clr-accent:     #f43f5e;
---clr-gradient:   linear-gradient(135deg, #fb7185 0%, #e11d48 60%, #be123c 100%);
-```
+## 📝 License
 
-### Add a profile photo
-1. Place your photo in `assets/` (e.g. `assets/priyanshi.jpg`).
-2. In `index.html`, inside the `#about` section, add:
-```html
-<div class="about-photo">
-  <img src="assets/priyanshi.jpg" alt="Priyanshi Mishra" width="360" height="360" />
-</div>
-```
-3. Style `.about-photo img` with `border-radius: 50%` or `var(--radius-lg)`.
-
----
-
-## ♿ Accessibility
-- All interactive elements have `:focus-visible` rings
-- ARIA roles, labels, and `aria-expanded`/`aria-hidden` managed in JS
-- Form errors announced via `role="alert"` and `aria-live="polite"`
-- Respects `prefers-reduced-motion` (animations disabled)
-- Colour contrast meets WCAG AA standards in both light and dark modes
-
----
-
-## 📄 License
 © 2026 Priyanshi Mishra. All rights reserved.
